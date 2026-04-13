@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinnacle Seller Net Sheet Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --warning: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, #f1f5f9 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(30, 58, 138, 0.1);
+        }
+
+        header img {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+        }
+
+        header h1 {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-top: 15px;
+            letter-spacing: -0.5px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .card h2 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background-color: #f0f7ff;
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 58, 138, 0.35);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: var(--bg);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .result-item label {
+            margin: 0;
+            font-size: 0.95em;
+        }
+
+        .result-item .value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .result-item.total {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border-left-color: var(--success);
+            padding: 18px;
+            margin-top: 15px;
+        }
+
+        .result-item.total .value {
+            color: var(--success);
+            font-size: 1.6em;
+        }
+
+        .result-item.negative .value {
+            color: var(--warning);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin: 20px 0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            background: linear-gradient(135deg, var(--bg) 0%, #f1f5f9 100%);
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .summary-item h3 {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .summary-item .amount {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%);
+            border-left: 4px solid var(--primary-light);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 40px;
+        }
+
+        .clearfix {
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="logo.png" alt="Pinnacle Estate Properties, Inc." style="max-width: 400px; width: 100%; height: auto; margin-bottom: 20px;">
+            <h1>Seller's Net Sheet</h1>
+        </header>
+
+        <div class="content">
+            <!-- Input Form -->
+            <div class="card">
+                <h2>Transaction Details</h2>
+                
+                <div class="form-group">
+                    <label for="seller">Seller Name</label>
+                    <input type="text" id="seller" placeholder="Enter seller name">
+                </div>
+
+                <div class="form-group">
+                    <label for="property">Property Address</label>
+                    <input type="text" id="property" placeholder="Enter property address">
+                </div>
+
+                <div class="input-group">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <select id="city">
+                            <option value="">Select City</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="county">County</label>
+                        <select id="county">
+                            <option value="">Select County</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="salesPrice">Sales Price ($)</label>
+                    <input type="number" id="salesPrice" placeholder="0.00" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="propertyTaxes">Annual Property Taxes ($)</label>
+                    <input type="number" id="propertyTaxes" placeholder="0.00" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="hoaDays">Days to Prorations (HOA/Taxes)</label>
+                    <input type="number" id="hoaDays" placeholder="0" step="1">
+                </div>
+
+                <h2 style="margin-top: 30px;">Liens & Credits</h2>
+
+                <div class="form-group">
+                    <label for="loan1">Existing 1st Loan Balance ($)</label>
+                    <input type="number" id="loan1" placeholder="0.00" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="loan2">Existing 2nd Loan Balance ($)</label>
+                    <input type="number" id="loan2" placeholder="0.00" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="loan3">Existing 3rd Loan Balance ($)</label>
+                    <input type="number" id="loan3" placeholder="0.00" step="0.01">
+                </div>
+
+                <h2 style="margin-top: 30px;">Commissions & Fees</h2>
+
+                <div class="form-group">
+                    <label for="sellerComm">Seller's Broker Compensation (%)</label>
+                    <input type="number" id="sellerComm" placeholder="0" step="0.1" value="2.5">
+                </div>
+
+                <div class="form-group">
+                    <label for="buyerComm">Buyer's Broker Compensation (%)</label>
+                    <input type="number" id="buyerComm" placeholder="0" step="0.1" value="2.5">
+                </div>
+
+                <div class="form-group">
+                    <label for="unrepComm">Unrepresented Buyer Compensation (%)</label>
+                    <input type="number" id="unrepComm" placeholder="0" step="0.1">
+                </div>
+
+                <div class="form-group">
+                    <label for="basePinnacle">Base Commission to Pinnacle ($)</label>
+                    <input type="number" id="basePinnacle" placeholder="0.00" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="hoaFees">HOA Document/Transfer Fees ($)</label>
+                    <input type="number" id="hoaFees" placeholder="0.00" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="sellerCredit">Seller Credit to Buyer ($)</label>
+                    <input type="number" id="sellerCredit" placeholder="0.00" step="0.01">
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="laCity">
+                        <label for="laCity">LA City Resident (2nd transfer tax)</label>
+                    </div>
+                </div>
+
+                <button onclick="calculate()" style="width: 100%; margin-top: 20px;">Calculate Net Proceeds</button>
+            </div>
+
+            <!-- Results -->
+            <div class="card">
+                <h2>Net Proceeds Analysis</h2>
+                
+                <div id="resultsContainer">
+                    <div class="info-box">
+                        Fill in the transaction details and click "Calculate Net Proceeds" to see results.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="content">
+            <div class="card">
+                <h2>Cost Breakdown</h2>
+                <div class="chart-container">
+                    <canvas id="costsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Money Flow</h2>
+                <div class="chart-container">
+                    <canvas id="flowChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Pinnacle Seller Net Sheet Calculator | Real Estate Transaction Analysis Tool</p>
+        </footer>
+    </div>
+
+    <script>
+        // Data from spreadsheet
+        const locationData = {
+            cities: ["Agoura Hills", "Anaheim", "Bakersfield", "Barstow", "Beverly Hills", "Big Bear Lake", "Burbank", "Calabasas", "California City", "Camarillo", "Cathedral City", "Coachella", "Compton", "Costa Mesa", "Covina", "Fillmore", "Garden Grove", "Glendale", "Hidden Hills", "Huntington Beach", "Inglewood", "Irvine", "Laguna", "Lancaster", "Lawndale", "Loma Linda", "Long Beach", "Los Angeles", "Malibu", "Mammoth Lakes", "Mission Viejo", "Montclair", "Moorpark", "Moreno Valley", "Newport Beach", "Ojai", "Orange", "Oxnard", "Palmdale", "Pasadena", "Port Hueneme", "Rancho Cucamonga", "San Bernardino", "San Fernando", "Santa Ana", "Santa Clarita", "Simi Valley", "Tehachapi", "Thousand Oaks", "Victorville", "Westlake Village", "Whittier"],
+            counties: ["Kern", "Los Angeles", "Mono", "Orange", "Riverside", "San Bernardino", "Ventura"]
+        };
+
+        // Initialize dropdowns
+        function initializeDropdowns() {
+            const citySelect = document.getElementById('city');
+            const countySelect = document.getElementById('county');
+
+            locationData.cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+
+            locationData.counties.forEach(county => {
+                const option = document.createElement('option');
+                option.value = county;
+                option.textContent = county;
+                countySelect.appendChild(option);
+            });
+        }
+
+        // Chart instances
+        let costsChart = null;
+        let flowChart = null;
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        function calculate() {
+            const salesPrice = parseFloat(document.getElementById('salesPrice').value) || 0;
+            const propertyTaxes = parseFloat(document.getElementById('propertyTaxes').value) || 0;
+            const hoaDays = parseFloat(document.getElementById('hoaDays').value) || 0;
+            const loan1 = parseFloat(document.getElementById('loan1').value) || 0;
+            const loan2 = parseFloat(document.getElementById('loan2').value) || 0;
+            const loan3 = parseFloat(document.getElementById('loan3').value) || 0;
+            const sellerCommPct = parseFloat(document.getElementById('sellerComm').value) || 0;
+            const buyerCommPct = parseFloat(document.getElementById('buyerComm').value) || 0;
+            const unrepCommPct = parseFloat(document.getElementById('unrepComm').value) || 0;
+            const basePinnacle = parseFloat(document.getElementById('basePinnacle').value) || 0;
+            const hoaFees = parseFloat(document.getElementById('hoaFees').value) || 0;
+            const sellerCredit = parseFloat(document.getElementById('sellerCredit').value) || 0;
+            const isLACity = document.getElementById('laCity').checked;
+
+            // Calculate commissions
+            const sellerComm = salesPrice * (sellerCommPct / 100);
+            const buyerComm = salesPrice * (buyerCommPct / 100);
+            const unrepComm = salesPrice * (unrepCommPct / 100);
+            const totalComm = sellerComm + buyerComm + unrepComm + basePinnacle;
+
+            // Transfer taxes (approximate for CA - 0.55% state + local)
+            const transferTax = salesPrice * 0.0055;
+            const localTransferTax = isLACity ? salesPrice * 0.0045 : 0;
+
+            // Proration
+            const dailyTaxRate = propertyTaxes / 365;
+            const taxProration = dailyTaxRate * hoaDays;
+
+            // Total costs
+            const totalCosts = totalComm + transferTax + localTransferTax + hoaFees + taxProration;
+
+            // Total loans
+            const totalLoans = loan1 + loan2 + loan3;
+
+            // Net proceeds
+            const netProceeds = salesPrice - totalLoans - totalCosts + sellerCredit;
+
+            // Display results
+            const resultsHtml = `
+                <div class="result-item">
+                    <label>Sales Price</label>
+                    <span class="value">${formatCurrency(salesPrice)}</span>
+                </div>
+                
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border);">
+                    <h3 style="color: var(--text-secondary); font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">DEDUCTIONS</h3>
+                </div>
+
+                ${loan1 > 0 ? `<div class="result-item">
+                    <label>1st Loan Payoff</label>
+                    <span class="value negative">-${formatCurrency(loan1)}</span>
+                </div>` : ''}
+
+                ${loan2 > 0 ? `<div class="result-item">
+                    <label>2nd Loan Payoff</label>
+                    <span class="value negative">-${formatCurrency(loan2)}</span>
+                </div>` : ''}
+
+                ${loan3 > 0 ? `<div class="result-item">
+                    <label>3rd Loan Payoff</label>
+                    <span class="value negative">-${formatCurrency(loan3)}</span>
+                </div>` : ''}
+
+                ${sellerComm > 0 ? `<div class="result-item">
+                    <label>Seller's Broker Commission (${sellerCommPct}%)</label>
+                    <span class="value negative">-${formatCurrency(sellerComm)}</span>
+                </div>` : ''}
+
+                ${buyerComm > 0 ? `<div class="result-item">
+                    <label>Buyer's Broker Commission (${buyerCommPct}%)</label>
+                    <span class="value negative">-${formatCurrency(buyerComm)}</span>
+                </div>` : ''}
+
+                ${unrepComm > 0 ? `<div class="result-item">
+                    <label>Unrepresented Buyer Comp (${unrepCommPct}%)</label>
+                    <span class="value negative">-${formatCurrency(unrepComm)}</span>
+                </div>` : ''}
+
+                ${basePinnacle > 0 ? `<div class="result-item">
+                    <label>Pinnacle Commission</label>
+                    <span class="value negative">-${formatCurrency(basePinnacle)}</span>
+                </div>` : ''}
+
+                ${transferTax > 0 ? `<div class="result-item">
+                    <label>State Transfer Tax</label>
+                    <span class="value negative">-${formatCurrency(transferTax)}</span>
+                </div>` : ''}
+
+                ${localTransferTax > 0 ? `<div class="result-item">
+                    <label>LA City Transfer Tax</label>
+                    <span class="value negative">-${formatCurrency(localTransferTax)}</span>
+                </div>` : ''}
+
+                ${hoaFees > 0 ? `<div class="result-item">
+                    <label>HOA Document/Transfer Fees</label>
+                    <span class="value negative">-${formatCurrency(hoaFees)}</span>
+                </div>` : ''}
+
+                ${taxProration > 0 ? `<div class="result-item">
+                    <label>Tax Proration (${hoaDays} days)</label>
+                    <span class="value negative">-${formatCurrency(taxProration)}</span>
+                </div>` : ''}
+
+                ${sellerCredit > 0 ? `<div class="result-item">
+                    <label>Seller Credit to Buyer</label>
+                    <span class="value">+${formatCurrency(sellerCredit)}</span>
+                </div>` : ''}
+
+                <div class="result-item total">
+                    <label>NET PROCEEDS TO SELLER</label>
+                    <span class="value">${formatCurrency(netProceeds)}</span>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <h3>Total Commissions</h3>
+                        <div class="amount">${formatCurrency(totalComm)}</div>
+                    </div>
+                    <div class="summary-item">
+                        <h3>Total Taxes & Fees</h3>
+                        <div class="amount">${formatCurrency(transferTax + localTransferTax + hoaFees + taxProration)}</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultsContainer').innerHTML = resultsHtml;
+
+            // Update charts
+            updateCharts(sellerComm, buyerComm, unrepComm, basePinnacle, transferTax, localTransferTax, hoaFees, taxProration, salesPrice, totalLoans, netProceeds, totalCosts);
+        }
+
+        function updateCharts(sellerComm, buyerComm, unrepComm, basePinnacle, transferTax, localTransferTax, hoaFees, taxProration, salesPrice, totalLoans, netProceeds, totalCosts) {
+            // Cost Breakdown Chart
+            const costsCtx = document.getElementById('costsChart').getContext('2d');
+            if (costsChart) costsChart.destroy();
+
+            costsChart = new Chart(costsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        `Seller Comm\n${formatCurrency(sellerComm)}`,
+                        `Buyer Comm\n${formatCurrency(buyerComm)}`,
+                        `Pinnacle\n${formatCurrency(basePinnacle)}`,
+                        `Transfer Tax\n${formatCurrency(transferTax + localTransferTax)}`,
+                        `Fees & Prorations\n${formatCurrency(hoaFees + taxProration)}`
+                    ],
+                    datasets: [{
+                        data: [sellerComm, buyerComm, basePinnacle, transferTax + localTransferTax, hoaFees + taxProration],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#8b5cf6',
+                            '#ec4899',
+                            '#f59e0b',
+                            '#6366f1'
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 12 },
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Money Flow Chart
+            const flowCtx = document.getElementById('flowChart').getContext('2d');
+            if (flowChart) flowChart.destroy();
+
+            flowChart = new Chart(flowCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sales Price', 'Less: Loans', 'Less: Costs', 'Plus: Credits', 'Net Proceeds'],
+                    datasets: [{
+                        label: 'Amount',
+                        data: [
+                            salesPrice,
+                            -totalLoans,
+                            -totalCosts,
+                            0,
+                            netProceeds
+                        ],
+                        backgroundColor: [
+                            '#10b981',
+                            '#ef4444',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#3b82f6'
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (value / 1000).toFixed(0) + 'k';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        initializeDropdowns();
+
+        // Add enter key support
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calculate();
+        });
+    </script>
+</body>
+</html>
